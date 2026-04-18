@@ -457,6 +457,99 @@
   }
   .pill.active { background: var(--accent); color: #0c1821; border-color: var(--accent); }
 
+  /* ── COVERAGE TAB ── */
+  .coverage-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .coverage-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .coverage-month {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .coverage-period {
+    font-size: 10px;
+    color: var(--text2);
+  }
+  .coverage-day-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border2);
+  }
+  .coverage-day-row:last-child { border-bottom: none; }
+  .coverage-dayname {
+    width: 36px;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+  }
+  .coverage-dayname.highlight { color: var(--accent); }
+  .coverage-owners {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    flex: 1;
+  }
+  .coverage-owner-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .coverage-rule {
+    font-size: 9px;
+    color: var(--text3);
+    font-style: italic;
+    align-self: center;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .coverage-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .coverage-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--text2);
+  }
+  .coverage-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .block-nav {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
   /* ── INSTALL BANNER ── */
   .install-banner {
     background: linear-gradient(135deg, #0f172a, #1a2744);
@@ -956,6 +1049,136 @@ function scheduleHTML(){
   return pills + legend + rows;
 }
 
+// ── CALL COVERAGE RULES ──────────────────────────────────────
+// Based on program call structure:
+//   Monday    → Joints service
+//   Tuesday   → (no fixed service rule — general pool)
+//   Wednesday → Foot & Ankle + Peds split
+//   Thursday  → (no fixed service rule — general pool)
+//   Friday    → (no fixed service rule — general pool)
+//   Saturday  → Sports + Joints split
+//   Sunday    → Foot & Ankle + Peds split
+//
+// For each day we identify which residents are on the owning
+// rotation(s) that block, then show them as the expected coverage.
+
+const DAY_RULES = [
+  { day: "Sunday",    label: "Sun", rotations: ["Peds BAMC","Foot & Ankle"], rule: "Peds + F&A split"      },
+  { day: "Monday",    label: "Mon", rotations: ["Sports","Joints"],          rule: "Sports + Joints split" },
+  { day: "Tuesday",   label: "Tue", rotations: ["SAMMC-Trauma"],             rule: "Trauma"                },
+  { day: "Wednesday", label: "Wed", rotations: ["Peds BAMC","Foot & Ankle"], rule: "Peds + F&A split"      },
+  { day: "Thursday",  label: "Thu", rotations: ["Sports","Joints"],          rule: "Sports + Joints split" },
+  { day: "Friday",    label: "Fri", rotations: ["SAMMC-Trauma"],             rule: "Trauma"                },
+  { day: "Saturday",  label: "Sat", rotations: ["Sports","Joints"],          rule: "Sports + Joints split" },
+];
+
+// 2-month blocks
+const COVERAGE_BLOCKS = [
+  { label:"Jul–Aug",  keys:["2026-07","2026-08"] },
+  { label:"Sep–Oct",  keys:["2026-09","2026-10"] },
+  { label:"Nov–Dec",  keys:["2026-11","2026-12"] },
+  { label:"Jan–Feb",  keys:["2027-01","2027-02"] },
+  { label:"Mar–Apr",  keys:["2027-03","2027-04"] },
+  { label:"May–Jun",  keys:["2027-05","2027-06"] },
+];
+
+let coverageBlock = "2026-07"; // selected block key
+
+function coverageHTML(){
+  // Block nav pills
+  let nav = `<div class="block-nav">`;
+  COVERAGE_BLOCKS.forEach(b=>{
+    const active = coverageBlock === b.keys[0];
+    nav += `<button class="pill${active?" active":""}" data-cblock="${b.keys[0]}">${b.label}</button>`;
+  });
+  nav += `</div>`;
+
+  // Which block is selected?
+  const block = COVERAGE_BLOCKS.find(b=>b.keys[0]===coverageBlock) || COVERAGE_BLOCKS[0];
+  const mk = block.keys[0]; // use first month of block for rotation lookup
+
+  // For each resident, what rotation are they on this block?
+  const residentRotThisBlock = {};
+  RESIDENTS.forEach(r=>{
+    residentRotThisBlock[r] = RESIDENT_ROTATIONS[r][mk] || null;
+  });
+
+  // Legend: show who's on what this block
+  let legend = `<div class="coverage-legend">`;
+  RESIDENTS.forEach(r=>{
+    const rot = residentRotThisBlock[r];
+    const pc = COLORS[r];
+    const rc = rot ? (ROTATION_COLORS[rot]||"#64748b") : "#64748b";
+    legend += `<div class="coverage-legend-item">
+      <div class="coverage-dot" style="background:${pc}"></div>
+      <span style="color:${pc};font-weight:700">${r}</span>
+      <span style="color:#334155">→</span>
+      ${rot ? `<span style="color:${rc};font-weight:600">${rot}</span>` : `<span style="color:#334155">—</span>`}
+    </div>`;
+  });
+  legend += `</div>`;
+
+  // Build the day-by-day coverage card
+  let card = `<div class="coverage-block">
+    <div class="coverage-block-header">
+      <span class="coverage-month">${block.label} Coverage</span>
+      <span class="coverage-period" style="font-size:10px;color:#475569">by rotation rule</span>
+    </div>`;
+
+  DAY_RULES.forEach(({day, label, rotations, rule})=>{
+    const isHighlight = true; // all days have a fixed rule now
+
+    // Find residents whose rotation this block matches the owning rotations
+    let owners = [];
+    if(rotations.length > 0){
+      RESIDENTS.forEach(r=>{
+        const rot = residentRotThisBlock[r];
+        if(rot && rotations.includes(rot)) owners.push(r);
+      });
+    }
+
+    // If no rule-based owners (Tue/Thu/Fri), show all residents as "pool"
+    const isPool = rotations.length === 0;
+
+    card += `<div class="coverage-day-row">
+      <span class="coverage-dayname${isHighlight?" highlight":""}">${label}</span>
+      <div class="coverage-owners">`;
+
+    if(isPool){
+      card += `<span style="font-size:11px;color:#334155;font-style:italic">All residents (pool)</span>`;
+    } else if(owners.length === 0){
+      card += `<span style="font-size:11px;color:#334155;font-style:italic">No residents on ${rotations.join("/")} this block</span>`;
+    } else {
+      owners.forEach(r=>{
+        const pc = COLORS[r];
+        const rot = residentRotThisBlock[r];
+        const rc = rot ? (ROTATION_COLORS[rot]||"#64748b") : "#64748b";
+        card += `<span class="coverage-owner-chip" style="background:${pc}18;color:${pc};border:1px solid ${pc}33">
+          ${esc(r)}
+          <span style="font-size:9px;color:${rc};font-weight:400;margin-left:2px">${rot||""}</span>
+        </span>`;
+      });
+    }
+
+    card += `</div>
+      <span class="coverage-rule">${rule}</span>
+    </div>`;
+  });
+
+  card += `</div>`;
+
+  // Also show a note about the rules
+  const rulesNote = `<div style="padding:10px 12px;background:#0d1526;border:1px solid #1e293b;border-radius:8px;font-size:11px;color:#475569;line-height:1.6">
+    <div style="font-weight:700;color:#64748b;margin-bottom:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em">Call Structure Rules</div>
+    <div>🟣 <strong style="color:#94a3b8">Sun / Wed</strong> — Peds + Foot &amp; Ankle split</div>
+    <div>🔵 <strong style="color:#94a3b8">Mon / Thu / Sat</strong> — Sports + Joints split</div>
+    <div>🔴 <strong style="color:#94a3b8">Tue / Fri</strong> — Trauma</div>
+  </div>`;
+
+  return `<div class="section-label">Expected coverage by rotation — select a block</div>`
+    + nav + legend + card + rulesNote;
+}
+
 function rotationsHTML(){
   const BLOCKS = [
     {label:"Jul–Aug",keys:["2026-07","2026-08"]},
@@ -977,10 +1200,7 @@ function rotationsHTML(){
     });
     html+=`</tr>`;
   });
-  // Tori
-  html+=`<tr><td><span style="font-weight:700;color:#64748b;font-size:12px">Tori</span></td>`;
-  BLOCKS.forEach(()=>{ html+=`<td style="text-align:center"><span class="rot-badge" style="background:#38bdf818;color:#38bdf8;border:1px solid #38bdf833">Research</span></td>`; });
-  html+=`</tr></tbody></table></div>`;
+  html+=`</tbody></table></div>`;
   return html;
 }
 
@@ -1062,9 +1282,10 @@ let _modalPerson = null;
 function render(){
   const app = document.getElementById("app");
   const tabDefs = [
-    {id:"upcoming",label:"🗓 Next 30"},
-    {id:"mine",    label:"My Calls"},
-    {id:"schedule",label:"Full Schedule"},
+    {id:"upcoming", label:"🗓 Next 30"},
+    {id:"mine",     label:"My Calls"},
+    {id:"schedule", label:"Full Schedule"},
+    {id:"coverage", label:"📅 Coverage"},
     {id:"rotations",label:"📋 Rotations"},
   ];
 
@@ -1076,6 +1297,7 @@ function render(){
   if(view==="upcoming") bodyHTML = upcomingHTML();
   else if(view==="mine") bodyHTML = mineHTML();
   else if(view==="schedule") bodyHTML = scheduleHTML();
+  else if(view==="coverage") bodyHTML = coverageHTML();
   else if(view==="rotations") bodyHTML = rotationsHTML();
 
   app.innerHTML = `
@@ -1138,7 +1360,12 @@ function attachEvents(){
 
   // month filter pills
   document.querySelectorAll(".pill").forEach(btn=>{
-    btn.addEventListener("click",()=>{ filterMonth=btn.dataset.month; render(); });
+    if(btn.dataset.month !== undefined){
+      btn.addEventListener("click",()=>{ filterMonth=btn.dataset.month; render(); });
+    }
+    if(btn.dataset.cblock !== undefined){
+      btn.addEventListener("click",()=>{ coverageBlock=btn.dataset.cblock; render(); });
+    }
   });
 
   // day rows → open modal
