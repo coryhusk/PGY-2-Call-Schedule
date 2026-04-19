@@ -9,8 +9,9 @@
 <meta name="theme-color" content="#060c18">
 <title>PGY-2 Call Schedule</title>
 
-<!-- PWA icons (inline SVG data URIs so no extra files needed) -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23060c18'/%3E%3Ctext x='90' y='120' font-size='90' text-anchor='middle' fill='%2338bdf8'%3E🏥%3C/text%3E%3C/svg%3E">
+<!-- PWA icon — cartoon broken femur -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23060c18'/><g transform='translate(90 90) rotate(-30)'><ellipse cx='0' cy='-50' rx='22' ry='18' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='-14' cy='-58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='14' cy='-58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='0' cy='50' rx='22' ry='18' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='-14' cy='58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='14' cy='58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><path d='M -12 -42 L -14 -10 L -20 -4 L -8 4 L -14 10 L -12 42 L 12 42 L 14 10 L 8 4 L 20 -4 L 14 -10 L 12 -42 Z' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3' stroke-linejoin='round'/><path d='M -20 -4 L -8 4 L -14 10 L 14 10 L 8 4 L 20 -4' stroke='%23ef4444' stroke-width='2.5' fill='none'/><circle cx='-3' cy='0' r='2' fill='%23ef4444'/><circle cx='4' cy='7' r='1.5' fill='%23ef4444'/></g></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23060c18'/><g transform='translate(90 90) rotate(-30)'><ellipse cx='0' cy='-50' rx='22' ry='18' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='-14' cy='-58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='14' cy='-58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='0' cy='50' rx='22' ry='18' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='-14' cy='58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><ellipse cx='14' cy='58' rx='12' ry='11' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3'/><path d='M -12 -42 L -14 -10 L -20 -4 L -8 4 L -14 10 L -12 42 L 12 42 L 14 10 L 8 4 L 20 -4 L 14 -10 L 12 -42 Z' fill='%23f5f1e4' stroke='%230c1821' stroke-width='3' stroke-linejoin='round'/><path d='M -20 -4 L -8 4 L -14 10 L 14 10 L 8 4 L 20 -4' stroke='%23ef4444' stroke-width='2.5' fill='none'/><circle cx='-3' cy='0' r='2' fill='%23ef4444'/><circle cx='4' cy='7' r='1.5' fill='%23ef4444'/></g></svg>">
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
@@ -173,7 +174,7 @@
     active: scale(0.98);
   }
   .day-row:active { transform: scale(0.98); opacity: 0.85; }
-  .day-row.is-cory   { background: linear-gradient(135deg, #0f172a, #1e293b); }
+  .day-row.is-me   { background: linear-gradient(135deg, #0f172a, #1e293b); }
   .day-row.is-past   { opacity: 0.45; background: #06090f; }
   .day-row.is-today  { border-color: var(--accent) !important; }
   .day-row.no-person { border-style: dashed; border-color: #141f33; background: var(--bg); }
@@ -214,9 +215,9 @@
     display: inline-block;
   }
 
-  .row-notes { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .note-comment   { font-size: 10px; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .note-conflict  { font-size: 10px; color: #78350f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row-notes { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .note-comment   { font-size: 10px; color: #475569; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.35; }
+  .note-conflict  { font-size: 10px; color: #78350f; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.35; }
 
   .countdown {
     font-size: 11px;
@@ -842,10 +843,12 @@ function esc(s){ const d=document.createElement("div"); d.textContent=s; return 
 let overrides = {};
 let view = "upcoming";
 let filterMonth = "all";
-let minePerson = "Cory";
+let minePerson = localStorage.getItem("minePerson") || "Cory";
 let editDate = null;
 let syncStatus = "connecting";
-let showInstall = !window.matchMedia("(display-mode: standalone)").matches;
+let showInstall = !window.matchMedia("(display-mode: standalone)").matches
+  && !window.navigator.standalone  // iOS Safari standalone check
+  && !localStorage.getItem("installBannerDismissed");
 
 const months = [];
 const seenMk = new Set();
@@ -854,8 +857,20 @@ SEED.forEach(r=>{ const k=monthKey(r.date); if(!seenMk.has(k)){seenMk.add(k);mon
 const grouped = {};
 SEED.forEach(r=>{ const k=monthKey(r.date); if(!grouped[k])grouped[k]=[]; grouped[k].push(r); });
 
-function merged(){ return SEED.map(e=>({...e,...(overrides[e.date]||{})})); }
-function getMerged(date){ const s=SEED.find(r=>r.date===date)||{}; return {...s,...(overrides[date]||{})}; }
+// An override with empty-string field ("" rather than undefined) means the user
+// explicitly cleared that field — convert to null so rendering treats it as empty
+// instead of inheriting the seed value.
+function applyOverride(seed, ov){
+  if(!ov) return { ...seed };
+  const out = { ...seed };
+  if("person" in ov)      out.person      = ov.person      === "" ? null : ov.person;
+  if("comment" in ov)     out.comment     = ov.comment     === "" ? null : ov.comment;
+  if("unavailable" in ov) out.unavailable = ov.unavailable === "" ? null : ov.unavailable;
+  return out;
+}
+
+function merged(){ return SEED.map(e=>applyOverride(e, overrides[e.date])); }
+function getMerged(date){ const s=SEED.find(r=>r.date===date)||{}; return applyOverride(s, overrides[date]); }
 
 // ── FIREBASE ──────────────────────────────────────────────────
 
@@ -925,22 +940,23 @@ function rowHTML(entry){
   const diff = daysUntil(entry.date);
   const isPast = diff < 0;
   const isToday = diff === 0;
-  const isCory = data.person === "Cory";
+  const isMe = data.person === minePerson;
   const rot = data.person ? resRot(data.person, entry.date) : null;
   const rotC = rot ? (ROTATION_COLORS[rot]||"#64748b") : null;
   const pC = data.person ? (COLORS[data.person]||"#94a3b8") : null;
+  const myColor = COLORS[minePerson] || "#38bdf8";
 
   let cls = "day-row";
-  if(isCory) cls += " is-cory";
+  if(isMe) cls += " is-me";
   if(isPast) cls += " is-past";
   if(isToday) cls += " is-today";
   if(!data.person) cls += " no-person";
 
-  const borderLeft = isCory ? `3px solid ${isPast?"#334155":"#38bdf8"}` : "3px solid transparent";
-  const border = isToday ? "1px solid #38bdf8" : isCory ? `1px solid ${isPast?"#1e3a5f":"#1d4ed8"}44` : !data.person ? "1px dashed #141f33" : "1px solid #0f1e30";
+  const borderLeft = isMe ? `3px solid ${isPast?"#334155":myColor}` : "3px solid transparent";
+  const border = isToday ? `1px solid ${myColor}` : isMe ? `1px solid ${isPast?"#1e3a5f":myColor}44` : !data.person ? "1px dashed #141f33" : "1px solid #0f1e30";
 
   const countdown = (!isPast && diff <= 30)
-    ? `<span class="countdown" style="color:${diff<=3?"#ef4444":diff<=7?"#f59e0b":"#38bdf8"}">${diff===0?"NOW":`${diff}d`}</span>`
+    ? `<span class="countdown" style="color:${diff<=3?"#ef4444":diff<=7?"#f59e0b":myColor}">${diff===0?"NOW":`${diff}d`}</span>`
     : "";
 
   return `<div class="${cls}" style="border:${border};border-left:${borderLeft}" data-date="${entry.date}">
@@ -1003,12 +1019,24 @@ function mineHTML(){
   });
   picker += `</div>`;
 
-  // rotation legend for selected person
-  let legend = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">`;
+  // rotation timeline for selected person — show ALL 6 blocks in order
+  const MY_BLOCKS = [
+    { label:"Jul–Aug", key:"2026-07" },
+    { label:"Sep–Oct", key:"2026-09" },
+    { label:"Nov–Dec", key:"2026-11" },
+    { label:"Jan–Feb", key:"2027-01" },
+    { label:"Mar–Apr", key:"2027-03" },
+    { label:"May–Jun", key:"2027-05" },
+  ];
+  let legend = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">`;
   const rots = RESIDENT_ROTATIONS[minePerson]||{};
-  const seen = new Set();
-  Object.values(rots).forEach(rot=>{
-    if(!seen.has(rot)){ seen.add(rot); legend += rotBadgeHTML(rot)+" "; }
+  MY_BLOCKS.forEach(b=>{
+    const rot = rots[b.key];
+    const rc = rot ? (ROTATION_COLORS[rot]||"#64748b") : "#64748b";
+    legend += `<div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">
+      <span style="font-size:8px;color:#475569;font-family:'JetBrains Mono',monospace;font-weight:700">${b.label}</span>
+      <span class="rot-badge" style="background:${rc}18;color:${rc};border:1px solid ${rc}33">${rot||"—"}</span>
+    </div>`;
   });
   legend += `</div>`;
 
@@ -1305,7 +1333,7 @@ function render(){
       <div class="header-top" style="max-width:700px;margin:0 auto">
         <div>
           <h1>PGY-2 Call Schedule</h1>
-          <div class="header-sub">Cory · Jul 2026–Jun 2027</div>
+          <div class="header-sub">You: <span style="color:${COLORS[minePerson]||"#38bdf8"};font-weight:700">${minePerson}</span> · Jul 2026–Jun 2027</div>
         </div>
         <span id="sync-badge" class="sync-badge ${syncStatus}">
           ${syncStatus==="live"?"● Live":syncStatus==="saving"?"↑ Saving…":syncStatus==="error"?"⚠ Offline":"… Connecting"}
@@ -1355,7 +1383,11 @@ function attachEvents(){
 
   // resident picker (mine tab)
   document.querySelectorAll(".res-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{ minePerson=btn.dataset.res; render(); });
+    btn.addEventListener("click",()=>{
+      minePerson=btn.dataset.res;
+      try { localStorage.setItem("minePerson", minePerson); } catch(e){}
+      render();
+    });
   });
 
   // month filter pills
@@ -1375,7 +1407,11 @@ function attachEvents(){
 
   // install close
   const ic = document.getElementById("install-close");
-  if(ic) ic.addEventListener("click",()=>{ showInstall=false; render(); });
+  if(ic) ic.addEventListener("click",()=>{
+    showInstall=false;
+    try { localStorage.setItem("installBannerDismissed","1"); } catch(e){}
+    render();
+  });
 
   // modal
   const overlay = document.getElementById("modal-overlay");
@@ -1394,9 +1430,15 @@ function attachEvents(){
     });
 
     document.getElementById("modal-save").addEventListener("click",async ()=>{
-      const comment = document.getElementById("modal-comment").value.trim()||null;
-      const unavail = document.getElementById("modal-unavail").value.trim()||null;
-      const changes = { person:_modalPerson||null, comment, unavailable:unavail };
+      const commentRaw = document.getElementById("modal-comment").value.trim();
+      const unavailRaw = document.getElementById("modal-unavail").value.trim();
+      // Use empty string (not null) to mark an explicit clear. Firebase drops null keys,
+      // which would cause seed values to bleed through on merge.
+      const changes = {
+        person:      _modalPerson || "",
+        comment:     commentRaw,
+        unavailable: unavailRaw,
+      };
       overrides[editDate] = changes;
       const savedDate = editDate;
       editDate = null;
