@@ -1037,6 +1037,33 @@ function personBadgeHTML(person){
   return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(person)}</span>`;
 }
 
+// ── HOLIDAYS ──────────────────────────────────────────────────
+const HOLIDAYS = {
+  "2026-07-04": { icon: "🇺🇸", name: "Independence Day" },
+  "2026-09-07": { icon: "👷", name: "Labor Day" },
+  "2026-09-11": { icon: "🕯️", name: "9/11 Remembrance" },
+  "2026-10-12": { icon: "🌎", name: "Columbus Day" },
+  "2026-10-31": { icon: "🎃", name: "Halloween" },
+  "2026-11-11": { icon: "🎖️", name: "Veterans Day" },
+  "2026-11-26": { icon: "🦃", name: "Thanksgiving" },
+  "2026-12-24": { icon: "🎄", name: "Christmas Eve" },
+  "2026-12-25": { icon: "🎄", name: "Christmas Day" },
+  "2026-12-31": { icon: "🎆", name: "New Year's Eve" },
+  "2027-01-01": { icon: "🎆", name: "New Year's Day" },
+  "2027-01-18": { icon: "✊🏿", name: "MLK Day" },
+  "2027-01-25": { icon: "🏆🏈", name: "CFP National Championship" },
+  "2027-02-15": { icon: "🇺🇸", name: "Presidents' Day" },
+  "2027-03-17": { icon: "🍀", name: "St. Patrick's Day" },
+  "2027-03-26": { icon: "🐣", name: "Good Friday" },
+  "2027-03-28": { icon: "🐰", name: "Easter Sunday" },
+  "2027-05-09": { icon: "💐", name: "Mother's Day" },
+  "2027-05-31": { icon: "🪖", name: "Memorial Day" },
+  "2027-06-19": { icon: "✊🏿", name: "Juneteenth" },
+  "2027-06-20": { icon: "👨", name: "Father's Day" },
+};
+
+function getHoliday(date){ return HOLIDAYS[date] || null; }
+
 function rowHTML(entry){
   const data = getMerged(entry.date);
   const diff = daysUntil(entry.date);
@@ -1047,6 +1074,7 @@ function rowHTML(entry){
   const rotC = rot ? (ROTATION_COLORS[rot]||"#64748b") : null;
   const pC = data.person ? (COLORS[data.person]||"#94a3b8") : null;
   const myColor = COLORS[minePerson] || "#38bdf8";
+  const holiday = getHoliday(entry.date);
 
   let cls = "day-row";
   if(isMe) cls += " is-me";
@@ -1061,11 +1089,16 @@ function rowHTML(entry){
     ? `<span class="countdown" style="color:${diff<=3?"#ef4444":diff<=7?"#f59e0b":myColor}">${diff===0?"NOW":`${diff}d`}</span>`
     : "";
 
+  const holidayTag = holiday
+    ? `<span title="${esc(holiday.name)}" style="font-size:14px;line-height:1;flex-shrink:0">${holiday.icon}</span>`
+    : "";
+
   return `<div class="${cls}" style="border:${border};border-left:${borderLeft}" data-date="${entry.date}">
     <div class="row-date ${isToday?"today":isPast?"past":""}">${isToday?"▶ ":""}${esc(fmtShort(entry.date))}</div>
     <div class="person-badge">${personBadgeHTML(data.person)}</div>
     <div class="rot-tag">${rot && !isPast ? rotBadgeHTML(rot) : ""}</div>
     <div class="row-notes">
+      ${holiday ? `<div class="note-comment" style="color:#64748b">${holiday.icon} ${esc(holiday.name)}</div>` : ""}
       ${data.comment ? `<div class="note-comment">💬 ${esc(data.comment)}</div>` : ""}
       ${data.unavailable ? `<div class="note-conflict">🚫 ${esc(data.unavailable)}</div>` : ""}
     </div>
@@ -1380,11 +1413,14 @@ function modalHTML(){
     ? `<div class="seed-note">Original: ${esc([seed.person,seed.comment,seed.unavailable].filter(Boolean).join(" · "))}</div>`
     : "";
 
+  const modalHoliday = getHoliday(editDate);
+
   return `<div class="modal-overlay" id="modal-overlay">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <div class="modal-date">${fmtFull(editDate)}</div>
-      <div class="modal-rot" style="color:#64748b;font-size:11px">📍 Cory: ${resRot("Cory",editDate)||"—"}</div>
+      <div class="modal-date">${fmtFull(editDate)}${modalHoliday ? ` <span style="font-size:18px">${modalHoliday.icon}</span>` : ""}</div>
+      ${modalHoliday ? `<div style="font-size:11px;color:#64748b;margin-bottom:2px">${modalHoliday.icon} ${esc(modalHoliday.name)}</div>` : ""}
+      <div class="modal-rot" style="color:#64748b;font-size:11px">📍 ${esc(minePerson)}: ${resRot(minePerson,editDate)||"—"}</div>
 
       <div class="modal-section-label">Who's on rotation</div>
       ${whoGrid}
