@@ -551,6 +551,101 @@
     margin-bottom: 12px;
   }
 
+  /* ── PASSWORD GATE ── */
+  .gate-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    gap: 0;
+  }
+  .gate-bone {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 24px;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .gate-bone img { width: 100%; height: 100%; }
+  .gate-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .gate-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .gate-input-wrap {
+    width: 100%;
+    max-width: 300px;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .gate-input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 44px 14px 16px;
+    color: #f1f5f9;
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .gate-input:focus { border-color: var(--accent); }
+  .gate-input.error { border-color: var(--danger); animation: shake 0.3s ease; }
+  .gate-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+  }
+  .gate-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #0c1821;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .gate-btn:active { opacity: 0.85; }
+  .gate-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 8px;
+    text-align: center;
+    min-height: 18px;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-8px); }
+    60%      { transform: translateX(8px); }
+  }
+
   /* ── INSTALL BANNER ── */
   .install-banner {
     background: linear-gradient(135deg, #0f172a, #1a2744);
@@ -837,6 +932,13 @@ function monthKey(s){ const d=parseDate(s); return `${d.getFullYear()}-${String(
 function monthLabel(s){ return parseDate(s).toLocaleDateString("en-US",{month:"long",year:"numeric"}); }
 function resRot(person,date){ if(!person||!RESIDENT_ROTATIONS[person])return null; return RESIDENT_ROTATIONS[person][monthKey(date)]||null; }
 function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+// ── PASSWORD GATE ─────────────────────────────────────────────
+const CORRECT_PW = "61butwhoiscounting?";
+let unlocked = localStorage.getItem("appUnlocked") === "1";
+let gateError = "";
+let showPw = false;
+let gateInput = "";
 
 // ── STATE ─────────────────────────────────────────────────────
 
@@ -1307,7 +1409,66 @@ function modalHTML(){
 
 let _modalPerson = null;
 
+function renderGate(){
+  // Get the bone icon src from the apple-touch-icon link
+  const iconEl = document.querySelector('link[rel="apple-touch-icon"]');
+  const iconSrc = iconEl ? iconEl.href : "";
+
+  document.getElementById("app").innerHTML = `
+    <div class="gate-screen">
+      <div class="gate-bone">
+        <img src="${iconSrc}" alt="bone">
+      </div>
+      <div class="gate-title">PGY-2 Call Schedule</div>
+      <div class="gate-sub">Class of 2030 · BAMC</div>
+      <div class="gate-input-wrap">
+        <input
+          class="gate-input${gateError?" error":""}"
+          id="gate-input"
+          type="${showPw?"text":"password"}"
+          placeholder="Enter password"
+          value="${esc(gateInput)}"
+          autocomplete="current-password"
+        >
+        <button class="gate-toggle" id="gate-toggle" type="button">${showPw?"🙈":"👁"}</button>
+      </div>
+      <button class="gate-btn" id="gate-btn">Unlock</button>
+      <div class="gate-error">${esc(gateError)}</div>
+    </div>
+  `;
+
+  const input = document.getElementById("gate-input");
+  const btn   = document.getElementById("gate-btn");
+  const tog   = document.getElementById("gate-toggle");
+
+  // Focus input on load
+  setTimeout(()=>input.focus(), 100);
+
+  input.addEventListener("input", e=>{ gateInput = e.target.value; gateError = ""; });
+  input.addEventListener("keydown", e=>{ if(e.key==="Enter") attemptUnlock(); });
+  btn.addEventListener("click", attemptUnlock);
+  tog.addEventListener("click", ()=>{ showPw=!showPw; gateInput=input.value; renderGate(); });
+}
+
+function attemptUnlock(){
+  const input = document.getElementById("gate-input");
+  const val = input ? input.value : gateInput;
+  if(val === CORRECT_PW){
+    unlocked = true;
+    gateError = "";
+    gateInput = "";
+    try { localStorage.setItem("appUnlocked","1"); } catch(e){}
+    render();
+    initFirebase();
+  } else {
+    gateError = "Incorrect password. Try again.";
+    gateInput = val;
+    renderGate();
+  }
+}
+
 function render(){
+  if(!unlocked){ renderGate(); return; }
   const app = document.getElementById("app");
   const tabDefs = [
     {id:"upcoming", label:"🗓 Next 30"},
@@ -1450,8 +1611,8 @@ function attachEvents(){
 
 // ── BOOT ──────────────────────────────────────────────────────
 
-render(); // show loading state first
-initFirebase();
+render(); // shows gate if locked, loading state if already unlocked
+if(unlocked) initFirebase();
 
 </script>
 </body>
